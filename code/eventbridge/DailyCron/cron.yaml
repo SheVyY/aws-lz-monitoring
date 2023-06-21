@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: EventBridge rule to trigger a monitoring state machine every day
+
+Resources:
+  DashboardRefreshRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: cron(0 14 * * ? *)  # Cron expression for 14:00 UTC every day
+      State: ENABLED  # Set to DISABLED if you want to disable the rule initially
+      Targets:
+        - Arn: !ImportValue StateMachineARN  # Replace with the ARN of your target resource
+          Id: MyTarget

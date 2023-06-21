@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Lambda function for processing Athena CSV data and mapping the data for monitoring
+
+Globals:
+  Function:
+    Timeout: 300
+
+Resources:
+  S3TransformRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: S3TransformRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3TransformRolePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: S3TransformQuery
+                Effect: Allow
+                Action:
+                  - "s3:*"
+                  - "s3-object-lambda:*"
+                Resource: "*" # TODO: restrict to specific bucket
+
+  S3TransformLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: S3TransformLambda
+      Description: Lambda function for processing CSV data and adding the LZ name and accounts
+      Handler: transform_lambda.lambda_handler
+      Runtime: python3.9
+      CodeUri: .
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3BucketName
+          LZ_MAPPING_KEY: !Ref LZMappingKey
+          LZ_AGGREGATED_KEY: !Ref LZAgregatedKey
+          OUTPUT_KEY: !Ref OutputKey
+      Role: !GetAtt S3TransformRole.Arn
+      Layers:
+        - !Ref FFspecLayer
+        # - !Sub arn:aws:lambda:{AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:2
+  
+  FFspecLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: FFspecLayer
+      Description: FFspec layer for Athena CSV Lambda
+      ContentUri: ./athena_layer
+      CompatibleRuntimes:
+        - python3.9
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: Name of the S3 bucket containing the CSV data from Athena
+    Default: athena-csv-data
+
+  LZMappingKey:
+    Type: String
+    Description: Key of the LZ mapping JSON file containing the LZ name and accounts mappings
+    Default: lz_mapping/lz_name_mapping.json
+
+  LZAgregatedKey:
+    Type: String
+    Description: Key of the LZ aggregated CSV file, containing the data from all the LZs
+    Default: lz_data/lz_aggregated.csv
+
+  OutputKey:
+    Type: String
+    Description: Key of the output CSV file containing the data from all the LZs, with the LZ name added and accounts
+    Default: lz_data/lz_aggregated_with_lz_name.csv

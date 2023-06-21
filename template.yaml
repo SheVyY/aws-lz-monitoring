@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Parent stack creating all resources for EPH multi-landing zone monitoring solution
+
+Resources:
+
+  ### EVENTBRIDGE STACK ###
+  #########################
+
+  # EventBridgeCronStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: "./code/eventbridge/DailyCron/cron.yaml"
+
+
+  ### STEP FUNCTION - STATE MACHINE ###
+  #####################################
+
+  # S3ReplicationStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: "./code/step_function/MonitoringStateMachine/state_machine.yaml"
+
+  ### LAMBDA STACKS ###
+  #####################
+
+  # Fetches all the data neeeded from child landing zones
+  S3ReplicationStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: "./code/lambda/S3ReplicationLambda/replication_lambda.yaml"
+
+  # S3RelocationStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: "./code/lambda/S3RelocationLambda/relocation_lambda.yaml"
+  
+  # S3TransformStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: "./code/lambda/S3TransformLambda/transform_lambda.yaml"
+
+  # AthenaQueryStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: "./code/lambda/AthenaQueryLambda/athena_query.yaml"
+
+  # AthenaQueryStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: "./code/lambda/RefreshQuickSightLambda/refresh_quicksight.yaml"

@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "sam-multi-eph"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1kqmwjpmef2pj"
+s3_prefix = "sam-multi-eph"
+region = "eu-central-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+image_repositories = []

@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Lambda function to copy and rename aggregated data from all landing zones to single S3 bucket location
+
+Globals:
+  Function:
+    Timeout: 300
+
+Resources:
+  S3RelocationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: S3RelocationLambdaRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3RelocationLambdaAccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:ListBucket"
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:PutObjectAcl"
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}" # Source and destination bucket
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+
+  S3RelocationLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: S3RelocationLambda
+      Description: Lambda function to copy and rename aggregated data from all landing zones to single S3 bucket location
+      Handler: relocation_lambda.lambda_handler
+      Runtime: python3.9
+      CodeUri: .
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BucketName
+          DIRECTORY_PREFIX: !Ref DirectoryPrefix
+          DESTINATION_DIRECTORY_PREFIX: !Ref DestinationDirectoryPrefix
+      Role: !GetAtt S3RelocationLambdaRole.Arn
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Name of the S3 bucket
+    Default: athena-eph-test
+
+  DirectoryPrefix:
+    Type: String
+    Description: Prefix for the directory in the S3 bucket
+    Default: landing_zone_
+
+  DestinationDirectoryPrefix:
+    Type: String
+    Description: Prefix for the destination directory in the S3 bucket
+    Default: lz_data/

@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: State Machine to orchestrate the monitoring automation of all Landing Zones
+
+Resources:
+  MyStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition:
+        Comment: A description of my state machine
+        StartAt: Fetch the data from Landing Zones
+        States:
+          Fetch the data from Landing Zones:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            OutputPath: "$.Payload"
+            Parameters:
+              FunctionName: "arn:aws:lambda:eu-central-1:955609534476:function:S3ReplicationLambda:$LATEST"
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Next: SafetyWait
+            Comment: This Lambda fetches all the data from all Cost Reports from all Landing Zones
+
+          SafetyWait:
+            Type: Wait
+            Seconds: 5
+            Next: StartCIDCrawler
+
+          StartCIDCrawler:
+            Type: Task
+            Parameters:
+              Name: CidCrawler
+            Resource: arn:aws:states:::aws-sdk:glue:startCrawler
+            Next: GetCIDCrawler
+
+          GetCIDCrawler:
+            Type: Task
+            Parameters:
+              Name: CidCrawler
+            Resource: arn:aws:states:::aws-sdk:glue:getCrawler
+            Next: Choice
+            TimeoutSeconds: 600
+
+          Choice:
+            Type: Choice
+            Choices:
+              - And:
+                  - Not:
+                      Variable: "$.Crawler.State"
+                      StringEquals: "READY"
+                  - Variable: "$.Crawler.LastCrawl.Status"
+                    StringEquals: "SUCCEEDED"
+                Next: "Wait for Crawler to Finish"
+            Default: "Query the Data and Upload CSV"
+
+          "Query the Data and Upload CSV":
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            OutputPath: "$.Payload"
+            Parameters:
+              FunctionName: "arn:aws:lambda:eu-central-1:955609534476:function:AthenaQueryCSV:$LATEST"
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Next: "Rename / Move S3 Data"
+
+          "Rename / Move S3 Data":
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            OutputPath: "$.Payload"
+            Parameters:
+              Payload.$: "$"
+              FunctionName: "arn:aws:lambda:eu-central-1:955609534476:function:MoveRenameLZ:$LATEST"
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Next: "Map and transform LZs Data"
+
+          "Map and transform LZs Data":
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            OutputPath: "$.Payload"
+            Parameters:
+              Payload.$: "$"
+              FunctionName: "arn:aws:lambda:eu-central-1:955609534476:function:Transform_LZ:$LATEST"
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Next: "Refresh QuickSight DataSet"
+
+          "Refresh QuickSight DataSet":
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            OutputPath: "$.Payload"
+            Parameters:
+              Payload.$: "$"
+              FunctionName: "arn:aws:lambda:eu-central-1:955609534476:function:DataSetRefresh:$LATEST"
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            End: true
+
+          "Wait for Crawler to Finish":
+            Type: Wait
+            Seconds: 10
+            Next: GetCIDCrawler
+
+Outputs:
+  StateMachineARN:
+    Value: !Ref MyStateMachine
+    Export:
+      Name: StateMachineARN

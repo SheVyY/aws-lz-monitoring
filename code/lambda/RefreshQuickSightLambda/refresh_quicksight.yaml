@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  DatasetName:
+    Type: String
+    Description: Name of the QuickSight dataset to refresh
+  AwsAccountId:
+    Type: String
+    Description: AWS account ID
+  QuickSightRegion:
+    Type: String
+    Description: AWS region where QuickSight is located
+
+Resources:
+  RefreshDatasetFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: RefreshDatasetFunction
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      CodeUri: .
+      Timeout: 300
+      Environment:
+        Variables:
+          DATASET_NAME: !Ref DatasetName
+          AWS_ACCOUNT_ID: !Ref AwsAccountId
+          QUICKSIGHT_REGION: !Ref QuickSightRegion
+      Role: !Ref RefreshDatasetRole
+
+  RefreshDatasetRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: RefreshDatasetRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: RefreshDatasetPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualizeQuickSightData
+                Effect: Allow
+                Action:
+                  - quicksight:ListDataSets
+                  - quicksight:CreateIngestion
+                  - quicksight:DescribeIngestion
+                Resource: '*' # TODO: restrict to specific dataset
