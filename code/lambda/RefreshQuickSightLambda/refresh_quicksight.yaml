@@ -21,6 +21,7 @@ Resources:
       Runtime: python3.9
       CodeUri: .
       Timeout: 300
+      MemorySize: 256
       Environment:
         Variables:
           DATASET_NAME: !Ref DatasetName

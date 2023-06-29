@@ -2,10 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: AWS Lambda function for processing Athena CSV data and mapping the data for monitoring
 
-Globals:
-  Function:
-    Timeout: 300
-
 Resources:
   S3TransformRole:
     Type: AWS::IAM::Role
@@ -40,6 +36,8 @@ Resources:
       Handler: transform_lambda.lambda_handler
       Runtime: python3.9
       CodeUri: .
+      MemorySize: 1028
+      Timeout: 300
       Environment:
         Variables:
           S3_BUCKET: !Ref S3BucketName
@@ -49,7 +47,7 @@ Resources:
       Role: !GetAtt S3TransformRole.Arn
       Layers:
         - !Ref FFspecLayer
-        # - !Sub arn:aws:lambda:{AWS::Region}:336392948345:layer:AWSSDKPandas-Python310:2
+        # - !Sub arn:aws:lambda:eu-central-1:336392948345:layer:AWSSDKPandas-Python310:2
   
   FFspecLayer:
     Type: AWS::Serverless::LayerVersion

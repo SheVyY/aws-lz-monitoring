@@ -65,6 +65,9 @@ Resources:
         Variables:
           OUTPUT_BUCKET_NAME: !Ref OutputBucketName
       Role: !GetAtt AthenaQueryRole.Arn
+      Layers:
+        - >-
+          arn:aws:lambda:eu-central-1:336392948345:layer:AWSSDKPandas-Python310:2
 
 Outputs:
   OutputBucketName:
