@@ -56,4 +56,64 @@ Users can access the QuickSight dashboard through the QuickSight web interface o
 
 The QuickSight monitoring dashboard provides a comprehensive view of the data from multiple Landing Zones, allowing users to track and analyze key metrics, identify anomalies, and make data-driven decisions.
 
-For detailed deployment instructions and usage examples, please refer to the [AWS SAM templates](./templates/) provided in this repository.
+## Deployment
+
+To deploy the Multi Landing Zones Monitoring Automation solution, use the provided AWS SAM template and deploy it as a CloudFormation stack.
+
+1. Clone the repository containing the solution's AWS SAM templates and documentation.
+
+2. Navigate to the root directory of the cloned repository.
+
+3. Open a terminal or command prompt and navigate to the root directory of the cloned repository.
+
+4. Build the SAM application by executing the following command:
+
+```bash
+sam build
+```
+
+5.  Deploy the SAM application using the following command:
+
+`sam deploy --guided`
+
+This command will guide you through the deployment process and prompt for the necessary parameters. Provide the required inputs, such as stack name, AWS Region, and any other parameters defined in the SAM template.
+
+Note: The deployment will take several minutes to complete.
+
+Once the deployment is successful, the Multi Landing Zones Monitoring Automation solution will be up and running in your AWS account.
+
+Nested Stacks
+-------------
+
+The Multi Landing Zones Monitoring Automation solution utilizes nested stacks to manage and deploy the individual Lambda functions. Each Lambda function is deployed as a separate stack, which allows for modular development and easier management of resources.
+
+The following nested stacks are included in the deployment:
+
+#### S3ReplicationStack
+
+This stack deploys the `S3ReplicationLambda`, which is responsible for fetching data from all Cost Reports in the Landing Zones. The Lambda function ensures data retrieval and retries the execution in case of specific errors.
+
+#### S3RelocationStack
+
+This stack deploys the `S3RelocationLambda`, which can be used to rename or move the S3 data. The Lambda function operates on the payload received from the previous Lambda, allowing for flexible data organization based on specific requirements.
+
+#### S3TransformStack
+
+This stack deploys the `S3TransformLambda`, which is responsible for mapping and transforming the Landing Zones' data. The Lambda function operates on the payload received from the previous Lambda, enabling data preparation for visualization.
+
+#### AthenaQueryStack
+
+This stack deploys the `AthenaQueryLambda`, which performs a query on the data fetched from the Landing Zones. The Lambda function generates a CSV file containing the query results, ensuring data transformation for further processing.
+
+#### RefreshQuickSightStack
+
+This stack deploys the `RefreshQuickSightLambda`, which is responsible for refreshing the QuickSight DataSet with the transformed data. The Lambda function operates on the payload received from the previous Lambda, ensuring the latest data is available for visualization in QuickSight.
+
+Conclusion
+----------
+
+Once the Multi Landing Zones Monitoring Automation solution is successfully deployed, it will orchestrate the monitoring workflow for data retrieval, transformation, and visualization. The Step Functions state machine will coordinate the execution of different resources and Lambdas, ensuring a seamless flow of data through each step.
+
+The solution provides a pre-configured QuickSight dashboard that is automatically updated with the latest data during the monitoring process. You can customize the dashboard to display different visualizations, charts, and tables based on your specific monitoring requirements.
+
+By leveraging this solution, you can simplify and streamline the monitoring of data from multiple Landing Zones, enabling you to track key metrics, identify trends, and make data-driven decisions.
