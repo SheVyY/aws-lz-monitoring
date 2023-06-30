@@ -24,7 +24,7 @@ The core of the solution is the **Step Functions state machine**, which consists
 
 0. **Triggering the State Machine:** The state machine is triggered via **EventBridge cron** at a specified time.
 
-### Explanation of the State Machine
+## Explanation of the State Machine
 
 1. **Fetch Data from Landing Zones (Lambda):** This state triggers a Lambda function (`S3ReplicationLambda`) to fetch data from all Cost Reports in the Landing Zones. The Lambda function retries the execution in case of specific errors, ensuring data retrieval.
 
@@ -46,7 +46,9 @@ The core of the solution is the **Step Functions state machine**, which consists
 
 10. **Wait for Crawler to Finish:** This state introduces a wait of 10 seconds before retrying the "Get CID Crawler" state. It provides a delay to allow the crawler to finish its operation before checking its status again.
 
-### Quicksight Dashboard
+## Quicksight Dashboard
+
+<img src="./img/quicksight_dashboard.png" alt="Quicksight Dashboard" width="800">
 
 The **QuickSight dashboard** is the main interface for monitoring the data from multiple Landing Zones. The transformed data is visualized and displayed on the dashboard, providing insights into various metrics and trends.
 
@@ -74,7 +76,9 @@ sam build
 
 5.  Deploy the SAM application using the following command:
 
-`sam deploy --guided`
+```bash
+sam deploy --guided
+```
 
 This command will guide you through the deployment process and prompt for the necessary parameters. Provide the required inputs, such as stack name, AWS Region, and any other parameters defined in the SAM template.
 
