@@ -20,7 +20,7 @@ The solution is built and deployed using the **AWS SAM framework**, which enable
 
 The core of the solution is the **Step Functions state machine**, which consists of several states and transitions that automate the monitoring process. Each state represents a specific task or action to be performed. The overall flow of the state machine is as follows:
 
-![State Machine Flow](./img/state_machine.png)
+<img src="./img/state_machine.png" alt="State Machine Flow" width="800">
 
 0. **Triggering the State Machine:** The state machine is triggered via **EventBridge cron** at a specified time.
 
