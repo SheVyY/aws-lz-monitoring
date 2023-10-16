@@ -1,8 +1,49 @@
-# Exclude sam build artifacts
-.aws-sam/*
+# Ignore AWS SAM build artifacts
+.sam/
+.build/
+**/.aws-sam/  # Ignore .aws-sam directories in all subdirectories
 
-# Exclude samconfig.toml
-samconfig.toml
+# Ignore local development environment files
+.env
 
-# Exclude .venv folder
-.venv/*
+# Ignore Python virtual environment directories and files (if using Python)
+__pycache/
+venv/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Node.js dependencies (if using Node.js)
+node_modules/
+
+# Ignore deployment package artifacts (if using Lambda functions)
+dist/
+
+# Ignore deployment artifacts (if using AWS CDK)
+cdk.out/
+
+# Ignore local SAM deployment artifacts
+template.yaml
+
+# Ignore AWS SAM logs and debugging information
+aws-sam-cli-history
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore editor-specific files and directories
+.vscode/
+.idea/
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore package-lock.json (if using Node.js)
+package-lock.json
+
+# Ignore yarn.lock (if using Node.js)
+yarn.lock
+
+# Include TOML files
+# *.toml
